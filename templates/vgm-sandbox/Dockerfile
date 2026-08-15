@@ -41,7 +41,10 @@ RUN bash -c 'source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install java '"${J
 ENV NPM_CONFIG_PREFIX=
 
 # nvm: node version manager
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
+# PROFILE is pinned because nvm's own detection does not pick .bashrc once the
+# agent's login shell is zsh
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh \
+    | PROFILE=/home/agent/.bashrc bash
 
 # node (NVM_DIR is only exported by .bashrc, so point at it explicitly;
 # NPM_CONFIG_PREFIX comes from the base image and nvm refuses to run with it set)
@@ -54,5 +57,17 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 
 COPY --chown=agent:agent zshrc /home/agent/.zshrc
 COPY --chown=agent:agent p10k.zsh /home/agent/.p10k.zsh
+
+# login shells read neither .bashrc nor the sdkman/nvm init it pulls in
+RUN printf '%s\n' '[[ -f ~/.bashrc ]] && . ~/.bashrc' > /home/agent/.bash_profile
+
+# hand interactive bash sessions over to zsh (non-interactive bash, which is what
+# agents run, never reads .bashrc and is left alone)
+RUN printf '%s\n' \
+    '' \
+    '# hand interactive bash sessions over to zsh' \
+    'if [[ $- == *i* ]] && [[ -z "$ZSH_VERSION" ]] && command -v zsh >/dev/null; then' \
+    '  exec zsh' \
+    'fi' >> /home/agent/.bashrc
 
 # user-level setup (rustup, dotfiles)
