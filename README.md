@@ -61,12 +61,25 @@ the sandbox is created rather than ahead of time.
 | Kit | Contents |
 | --- | --- |
 | `kits/vgm-python` | uv, CPython 3.13, `python` pointing at it |
+| `kits/vgm-jvm` | SDKMAN, GraalVM CE 21.0.2 as the default JDK |
+| `kits/vgm-node` | nvm, Node 22.21.1 as the default |
+| `kits/vgm-zsh` | zsh as the login shell, oh-my-zsh, powerlevel10k, fzf |
 
-Attach one or more to a new sandbox:
+They are independent, so take the ones you want:
 
 ```bash
-sbx run --kit ./kits/vgm-python claude
+sbx run --kit ./kits/vgm-python --kit ./kits/vgm-jvm \
+        --kit ./kits/vgm-node --kit ./kits/vgm-zsh claude
 ```
+
+The toolchain kits write their shell init to `/etc/sandbox-persistent.sh` and
+`~/.zshenv`, so `python`, `java` and `node` resolve in non-interactive shells as
+well — including the ones an agent runs. That is the part the template never got
+right.
+
+Sandboxes deny outbound network by default, so each kit declares the hosts its
+installers reach. When something fails to install, `sbx policy log` names the
+blocked host.
 
 Attach one to a sandbox that already exists. Its container is recreated with the
 kit appended, and workspace data and agent session state are preserved:
@@ -86,9 +99,13 @@ sbx kit inspect ./kits/vgm-python
 
 ## Shell configuration
 
-`templates/vgm-sandbox/zshrc` and `p10k.zsh` are copies of my host dotfiles,
-minus the macOS-specific parts (Homebrew paths, pyenv, LM Studio). The
-powerlevel10k prompt expects a Nerd Font in the terminal you attach from.
+`kits/vgm-zsh/files/home/.zshrc` and `.p10k.zsh` (and their copies in
+`templates/vgm-sandbox/`) are my host dotfiles, minus the macOS-specific parts
+(Homebrew paths, pyenv, LM Studio). The powerlevel10k prompt expects a Nerd Font
+in the terminal you attach from.
+
+Interactive bash hands over to zsh, so `sbx exec -it <sandbox> bash` lands in
+zsh too. Non-interactive bash is left alone, which is what agents run.
 
 ## License
 
