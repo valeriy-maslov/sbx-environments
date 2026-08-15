@@ -1,0 +1,64 @@
+schemaVersion: "2"
+kind: mixin
+name: vgm-zsh
+version: "0.1.0"
+displayName: zsh (oh-my-zsh + powerlevel10k)
+description: zsh as the login shell, with oh-my-zsh, powerlevel10k and fzf
+sourceURL: https://github.com/valeriy-maslov/sbx-environments
+licenses:
+  - MIT
+
+permissions:
+  network:
+    allow:
+      # oh-my-zsh installer and the powerlevel10k clone
+      - "raw.githubusercontent.com:443"
+      - "github.com:443"
+      # apt, for zsh and fzf
+      - "archive.ubuntu.com:80"
+      - "ports.ubuntu.com:80"
+      - "security.ubuntu.com:80"
+
+setup:
+  files:
+    # login shells read neither .bashrc nor BASH_ENV, so hand them to .bashrc
+    - path: /home/agent/.bash_profile
+      content: |
+        [[ -f ~/.bashrc ]] && . ~/.bashrc
+      mode: "0644"
+      description: Make login bash read .bashrc
+
+  install:
+    # the base kit runs its own apt-get update on startup, so wait out the lock
+    - command: |
+        for i in $(seq 1 30); do
+          apt-get -o DPkg::Lock::Timeout=60 update && break
+          sleep 2
+        done
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=60 install -y zsh fzf
+      user: "0"
+      description: Install zsh and fzf
+
+    - command: "chsh -s /bin/zsh agent"
+      user: "0"
+      description: Make zsh the login shell
+
+    # --keep-zshrc leaves the .zshrc shipped in files/home/ alone
+    - command: 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc'
+      user: "1000"
+      description: Install oh-my-zsh
+
+    - command: "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k"
+      user: "1000"
+      description: Install the powerlevel10k theme
+
+    - command: |
+        cat >> "$HOME/.bashrc" <<'EOF'
+
+        # hand interactive bash sessions over to zsh
+        if [[ $- == *i* ]] && [[ -z "$ZSH_VERSION" ]] && command -v zsh >/dev/null; then
+          exec zsh
+        fi
+        EOF
+      user: "1000"
+      description: Hand interactive bash sessions over to zsh
