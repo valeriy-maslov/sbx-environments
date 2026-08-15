@@ -7,56 +7,16 @@ so a new sandbox comes up with the tooling I expect.
 
 Use it if it is helpful, but it is tuned to my preferences.
 
-## Templates
-
-### `templates/vgm-sandbox`
-
-Built on `docker/sandbox-templates:claude-code-docker` (Ubuntu 26.04).
-
-| Tool | Version | Notes |
-| --- | --- | --- |
-| uv | 0.12.5 | manages Python versions and venvs |
-| Python | 3.13 | `python`; the system `python3` stays at 3.14 |
-| SDKMAN | latest | JVM toolchain manager |
-| Java | 21.0.2-graalce | GraalVM CE, set as the SDKMAN default |
-| nvm | 0.40.6 | Node version manager |
-| Node | 22.21.1 | set as the nvm default |
-| Go | 1.26 | from the base image, `GOTOOLCHAIN=auto` |
-| zsh | apt | login shell, with oh-my-zsh, powerlevel10k and fzf |
-
-Versions are build args, so they can be overridden without editing the
-Dockerfile:
-
-```bash
-docker build --build-arg JAVA_VERSION=21.0.12-graal -t vgm-sandbox:v1 templates/vgm-sandbox
-```
-
-## Usage
-
-Build the image and export it as a tarball:
-
-```bash
-make vgm-sandbox
-```
-
-Load it into the sandbox runtime and start a sandbox. The runtime keeps its own
-image store, so the tarball round trip is what keeps this working without a
-registry:
-
-```bash
-sbx template load dist/vgm-sandbox-v1.tar
-sbx run -t vgm-sandbox:v1 claude
-```
-
-`sbx run -t vgm-sandbox:v1 shell` opens zsh instead of an agent, and
-`sbx exec -it <sandbox> zsh` attaches to a running one.
-
 ## Kits
 
-Kits are the direction this repo is moving in: the same tooling as the template,
-but as `spec.yaml` mixins that attach to any agent instead of being baked into a
-`claude-code` image. They are experimental, and they run their install steps when
-the sandbox is created rather than ahead of time.
+Everything here is a kit: a `spec.yaml` mixin that attaches to whichever agent
+you launch, rather than an image you have to build first. Kits are experimental,
+and they run their install steps when the sandbox is created, which costs about
+a minute for the full set.
+
+This started as a Docker template and was replaced by kits, because a template
+is a 5 GB image every machine has to rebuild, it is tied to one agent, and its
+toolchains only worked in interactive shells.
 
 | Kit | Contents |
 | --- | --- |
@@ -99,10 +59,9 @@ sbx kit inspect ./kits/vgm-python
 
 ## Shell configuration
 
-`kits/vgm-zsh/files/home/.zshrc` and `.p10k.zsh` (and their copies in
-`templates/vgm-sandbox/`) are my host dotfiles, minus the macOS-specific parts
-(Homebrew paths, pyenv, LM Studio). The powerlevel10k prompt expects a Nerd Font
-in the terminal you attach from.
+`kits/vgm-zsh/files/home/.zshrc` and `.p10k.zsh` are my host dotfiles, minus the
+macOS-specific parts (Homebrew paths, pyenv, LM Studio). The powerlevel10k
+prompt expects a Nerd Font in the terminal you attach from.
 
 Interactive bash hands over to zsh, so `sbx exec -it <sandbox> bash` lands in
 zsh too. Non-interactive bash is left alone, which is what agents run.
