@@ -29,15 +29,3 @@ setup:
     - command: "curl -fsSL https://pi.dev/install.sh | sh"
       user: "1000"
       description: Install the pi coding agent
-
-agentInstructions:
-  filename: AGENTS.md
-  content: |
-    ## Sandbox environment
-
-    You are running inside a Docker sandbox. Outbound network access is denied
-    by default and only the hosts declared by this kit are reachable, so a
-    failing download is usually a policy decision rather than a broken mirror.
-
-    The workspace is mounted from the host. Treat everything outside it as
-    scratch space that disappears with the sandbox.

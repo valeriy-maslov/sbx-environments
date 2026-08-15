@@ -51,13 +51,3 @@ setup:
         DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=60 install -y fzf
       user: "0"
       description: Install fzf, which ralphex uses to pick a plan
-
-agentInstructions:
-  content: |
-    ## ralphex
-
-    `ralphex` is installed in this sandbox. It executes a markdown plan
-    autonomously by driving fresh Claude Code sessions, then reviews the result.
-
-    Plans live in `docs/plans/`. Config is read from `.ralphex/` in the
-    repository root, falling back to `~/.config/ralphex/`.
