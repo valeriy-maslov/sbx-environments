@@ -7,6 +7,26 @@ so a new sandbox comes up with the tooling I expect.
 
 Use it if it is helpful, but it is tuned to my preferences.
 
+## Quick start
+
+Create a sandbox with all of the kits attached, without checking anything out:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/valeriy-maslov/sbx-environments/master/scripts/vgm-sandbox.sh | sh
+```
+
+It defaults to `claude` in the current directory. Pass an agent and a workspace
+to change that, and set `VGM_SANDBOX_NAME` to name the sandbox:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/valeriy-maslov/sbx-environments/master/scripts/vgm-sandbox.sh \
+  | sh -s -- codex ~/Projects/thing
+```
+
+The script creates the sandbox and prints the `sbx run --name ...` command to
+attach, rather than attaching itself: piping into `sh` takes over stdin, which
+an interactive agent needs.
+
 ## Kits
 
 Everything here is a kit: a `spec.yaml` mixin that attaches to whichever agent
