@@ -1,0 +1,48 @@
+schemaVersion: "2"
+kind: mixin
+name: vgm-node
+version: "0.1.0"
+displayName: Node (nvm)
+description: nvm with a pinned Node, available in every shell
+sourceURL: https://github.com/valeriy-maslov/sbx-environments
+licenses:
+  - MIT
+
+permissions:
+  network:
+    allow:
+      # nvm's installer
+      - "raw.githubusercontent.com:443"
+      - "github.com:443"
+      # node binaries and the version index
+      - "nodejs.org:443"
+
+setup:
+  install:
+    # PROFILE=/dev/null keeps nvm out of the rc files; the init below owns that
+    - command: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | PROFILE=/dev/null bash"
+      user: "1000"
+      description: Install nvm
+
+    # some base images set NPM_CONFIG_PREFIX, which nvm refuses to run with
+    - command: 'bash -c ''unset NPM_CONFIG_PREFIX && . "$HOME/.nvm/nvm.sh" && nvm install 22.21.1 && nvm alias default 22.21.1'''
+      user: "1000"
+      description: Install Node 22.21.1 and make it the default
+
+    - command: |
+        cat >> /etc/sandbox-persistent.sh <<'EOF'
+        export NVM_DIR="$HOME/.nvm"
+        unset NPM_CONFIG_PREFIX
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+        EOF
+      user: "0"
+      description: Source nvm in every bash shell
+
+    - command: |
+        cat >> "$HOME/.zshenv" <<'EOF'
+        export NVM_DIR="$HOME/.nvm"
+        unset NPM_CONFIG_PREFIX
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+        EOF
+      user: "1000"
+      description: Source nvm in every zsh shell
