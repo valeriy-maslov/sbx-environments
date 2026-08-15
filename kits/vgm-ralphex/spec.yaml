@@ -1,0 +1,63 @@
+schemaVersion: "2"
+kind: mixin
+name: vgm-ralphex
+version: "0.1.0"
+displayName: ralphex
+description: Autonomous plan execution driven by Claude Code, from umputun/ralphex
+sourceURL: https://github.com/valeriy-maslov/sbx-environments
+licenses:
+  - MIT
+
+permissions:
+  network:
+    allow:
+      # the release tarball, and the asset host github redirects to
+      - "github.com:443"
+      - "objects.githubusercontent.com:443"
+      - "release-assets.githubusercontent.com:443"
+      # apt, for fzf
+      - "archive.ubuntu.com:80"
+      - "ports.ubuntu.com:80"
+      - "security.ubuntu.com:80"
+
+setup:
+  install:
+    # a release binary rather than "go install", so the kit does not depend on
+    # a Go toolchain being present in whichever agent image it lands on
+    - command: |
+        set -eu
+        version=1.6.1
+        case "$(uname -m)" in
+          aarch64|arm64) arch=arm64 ;;
+          x86_64|amd64)  arch=amd64 ;;
+          *) echo "ralphex: unsupported architecture $(uname -m)" >&2; exit 1 ;;
+        esac
+        tmp="$(mktemp -d)"
+        curl -fsSL "https://github.com/umputun/ralphex/releases/download/v${version}/ralphex_${version}_linux_${arch}.tar.gz" \
+          -o "$tmp/ralphex.tar.gz"
+        tar -xzf "$tmp/ralphex.tar.gz" -C "$tmp" ralphex completions
+        install -m 0755 "$tmp/ralphex" /usr/local/bin/ralphex
+        install -m 0644 "$tmp/completions/ralphex.bash" /etc/bash_completion.d/ralphex
+        rm -rf "$tmp"
+      user: "0"
+      description: Install the ralphex binary
+
+    # optional in ralphex, but it is what makes plan selection usable
+    - command: |
+        for i in $(seq 1 30); do
+          apt-get -o DPkg::Lock::Timeout=60 update && break
+          sleep 2
+        done
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=60 install -y fzf
+      user: "0"
+      description: Install fzf, which ralphex uses to pick a plan
+
+agentInstructions:
+  content: |
+    ## ralphex
+
+    `ralphex` is installed in this sandbox. It executes a markdown plan
+    autonomously by driving fresh Claude Code sessions, then reviews the result.
+
+    Plans live in `docs/plans/`. Config is read from `.ralphex/` in the
+    repository root, falling back to `~/.config/ralphex/`.

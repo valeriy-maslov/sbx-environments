@@ -44,6 +44,7 @@ toolchains only worked in interactive shells.
 | `kits/vgm-jvm` | mixin | SDKMAN, GraalVM CE 21.0.2 as the default JDK |
 | `kits/vgm-node` | mixin | nvm, Node 22.21.1 as the default |
 | `kits/vgm-zsh` | mixin | zsh as the login shell, oh-my-zsh, powerlevel10k, fzf |
+| `kits/vgm-ralphex` | mixin | [ralphex](https://github.com/umputun/ralphex), autonomous plan execution, plus fzf |
 | `kits/pi` | sandbox | the [pi](https://pi.dev/) coding agent, which sbx has no built-in agent for |
 
 The mixins are independent, so take the ones you want:
@@ -61,6 +62,24 @@ right.
 Sandboxes deny outbound network by default, so each kit declares the hosts its
 installers reach. When something fails to install, `sbx policy log` names the
 blocked host.
+
+## ralphex
+
+`kits/vgm-ralphex` installs [ralphex](https://github.com/umputun/ralphex), which
+executes a markdown plan autonomously by driving fresh Claude Code sessions and
+then reviewing the result. It drives the `claude` CLI, so pair it with the claude
+agent:
+
+```bash
+sbx run --kit ./kits/vgm-ralphex claude
+```
+
+It installs the release binary for the sandbox's architecture rather than using
+`go install`, so it does not need a Go toolchain in the base image. fzf comes
+along too, since that is what ralphex uses to pick a plan.
+
+Plans live in `docs/plans/`, and config in `.ralphex/` in the repository root,
+falling back to `~/.config/ralphex/`.
 
 ## The pi agent
 
