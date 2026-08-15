@@ -33,7 +33,12 @@ case "$WORKSPACE" in
 esac
 [ -d "$WORKSPACE" ] || { echo "vgm-sandbox: no such directory: $WORKSPACE" >&2; exit 1; }
 
-NAME="${VGM_SANDBOX_NAME:-vgm-$(basename "$WORKSPACE" | tr -c 'a-zA-Z0-9_.-' '-')}"
+# printf avoids the trailing newline that tr would otherwise turn into a dash
+SLUG="$(printf '%s' "$(basename "$WORKSPACE")" | tr -c 'a-zA-Z0-9_.-' '-')"
+case "$SLUG" in
+  vgm-*|vgm) NAME="${VGM_SANDBOX_NAME:-$SLUG}" ;;
+  *)         NAME="${VGM_SANDBOX_NAME:-vgm-$SLUG}" ;;
+esac
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT INT TERM
