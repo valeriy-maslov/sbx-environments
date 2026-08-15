@@ -51,6 +51,39 @@ sbx run -t vgm-sandbox:v1 claude
 `sbx run -t vgm-sandbox:v1 shell` opens zsh instead of an agent, and
 `sbx exec -it <sandbox> zsh` attaches to a running one.
 
+## Kits
+
+Kits are the direction this repo is moving in: the same tooling as the template,
+but as `spec.yaml` mixins that attach to any agent instead of being baked into a
+`claude-code` image. They are experimental, and they run their install steps when
+the sandbox is created rather than ahead of time.
+
+| Kit | Contents |
+| --- | --- |
+| `kits/vgm-python` | uv, CPython 3.13, `python` pointing at it |
+
+Attach one or more to a new sandbox:
+
+```bash
+sbx run --kit ./kits/vgm-python claude
+```
+
+Attach one to a sandbox that already exists. Its container is recreated with the
+kit appended, and workspace data and agent session state are preserved:
+
+```bash
+sbx kit add <sandbox> ./kits/vgm-python
+```
+
+Kit references can also be a ZIP, an OCI registry reference, or a git repository,
+so the same kit works from a checkout or straight from GitHub. Before using one,
+check it:
+
+```bash
+sbx kit validate ./kits/vgm-python
+sbx kit inspect ./kits/vgm-python
+```
+
 ## Shell configuration
 
 `templates/vgm-sandbox/zshrc` and `p10k.zsh` are copies of my host dotfiles,

@@ -1,0 +1,32 @@
+schemaVersion: "2"
+kind: mixin
+name: vgm-python
+version: "0.1.0"
+displayName: Python (uv)
+description: uv with a pinned CPython, kept off the PEP 668 system interpreter
+sourceURL: https://github.com/valeriy-maslov/sbx-environments
+licenses:
+  - MIT
+
+permissions:
+  network:
+    allow:
+      # astral.sh redirects the installer to releases.astral.sh
+      - "astral.sh:443"
+      - "releases.astral.sh:443"
+      # uv pulls interpreters from python-build-standalone release assets
+      - "github.com:443"
+      - "objects.githubusercontent.com:443"
+      - "release-assets.githubusercontent.com:443"
+
+setup:
+  install:
+    - command: "curl -LsSf https://astral.sh/uv/0.12.5/install.sh | sh"
+      user: "1000"
+      description: Install uv
+    - command: "$HOME/.local/bin/uv python install 3.13"
+      user: "1000"
+      description: Install CPython 3.13
+    - command: "ln -sfn python3.13 $HOME/.local/bin/python"
+      user: "1000"
+      description: Point python at the uv interpreter
