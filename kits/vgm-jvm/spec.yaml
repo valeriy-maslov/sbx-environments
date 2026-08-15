@@ -1,0 +1,61 @@
+schemaVersion: "2"
+kind: mixin
+name: vgm-jvm
+version: "0.1.0"
+displayName: JVM (SDKMAN)
+description: SDKMAN with GraalVM CE 21 as the default JDK
+sourceURL: https://github.com/valeriy-maslov/sbx-environments
+licenses:
+  - MIT
+
+permissions:
+  network:
+    allow:
+      # sdkman installer and its candidate/download broker
+      - "get.sdkman.io:443"
+      - "api.sdkman.io:443"
+      - "broker.sdkman.io:443"
+      # the broker redirects jdk downloads to github release assets
+      - "github.com:443"
+      - "objects.githubusercontent.com:443"
+      - "release-assets.githubusercontent.com:443"
+      # apt, for zip
+      - "archive.ubuntu.com:80"
+      - "ports.ubuntu.com:80"
+      - "security.ubuntu.com:80"
+
+setup:
+  install:
+    # the base kit runs its own apt-get update on startup, so wait out the lock
+    - command: |
+        for i in $(seq 1 30); do
+          apt-get -o DPkg::Lock::Timeout=60 update && break
+          sleep 2
+        done
+        DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=60 install -y zip unzip
+      user: "0"
+      description: Install zip and unzip, which sdkman requires
+
+    - command: "curl -s https://get.sdkman.io | bash"
+      user: "1000"
+      description: Install sdkman
+
+    - command: 'bash -c ''source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install java 21.0.2-graalce'''
+      user: "1000"
+      description: Install GraalVM CE 21 and make it the default jdk
+
+    - command: |
+        cat >> /etc/sandbox-persistent.sh <<'EOF'
+        export SDKMAN_DIR="$HOME/.sdkman"
+        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && . "$SDKMAN_DIR/bin/sdkman-init.sh"
+        EOF
+      user: "0"
+      description: Source sdkman in every bash shell
+
+    - command: |
+        cat >> "$HOME/.zshenv" <<'EOF'
+        export SDKMAN_DIR="$HOME/.sdkman"
+        [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ] && . "$SDKMAN_DIR/bin/sdkman-init.sh"
+        EOF
+      user: "1000"
+      description: Source sdkman in every zsh shell
