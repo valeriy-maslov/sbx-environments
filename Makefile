@@ -3,7 +3,7 @@ TAG     ?= v1
 CONTEXT ?= templates/vgm-sandbox
 TARBALL ?= dist/$(IMAGE)-$(TAG).tar
 
-.PHONY: vgm-sandbox vgm-sandbox-build vgm-sandbox-save
+.PHONY: vgm-sandbox
 
 vgm-sandbox: vgm-sandbox-build vgm-sandbox-save
 
