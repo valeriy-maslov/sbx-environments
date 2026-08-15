@@ -14,7 +14,7 @@ set -eu
 
 REPO="${VGM_SANDBOX_REPO:-https://github.com/valeriy-maslov/sbx-environments.git}"
 BRANCH="${VGM_SANDBOX_BRANCH:-master}"
-KITS="vgm-python vgm-jvm vgm-node vgm-zsh"
+KITS="${VGM_SANDBOX_KITS:-vgm-python vgm-jvm vgm-node vgm-zsh vgm-ralphex}"
 
 AGENT="${1:-claude}"
 [ $# -gt 0 ] && shift || true
