@@ -38,14 +38,15 @@ This started as a Docker template and was replaced by kits, because a template
 is a 5 GB image every machine has to rebuild, it is tied to one agent, and its
 toolchains only worked in interactive shells.
 
-| Kit | Contents |
-| --- | --- |
-| `kits/vgm-python` | uv, CPython 3.13, `python` pointing at it |
-| `kits/vgm-jvm` | SDKMAN, GraalVM CE 21.0.2 as the default JDK |
-| `kits/vgm-node` | nvm, Node 22.21.1 as the default |
-| `kits/vgm-zsh` | zsh as the login shell, oh-my-zsh, powerlevel10k, fzf |
+| Kit | Kind | Contents |
+| --- | --- | --- |
+| `kits/vgm-python` | mixin | uv, CPython 3.13, `python` pointing at it |
+| `kits/vgm-jvm` | mixin | SDKMAN, GraalVM CE 21.0.2 as the default JDK |
+| `kits/vgm-node` | mixin | nvm, Node 22.21.1 as the default |
+| `kits/vgm-zsh` | mixin | zsh as the login shell, oh-my-zsh, powerlevel10k, fzf |
+| `kits/pi` | sandbox | the [pi](https://pi.dev/) coding agent, which sbx has no built-in agent for |
 
-They are independent, so take the ones you want:
+The mixins are independent, so take the ones you want:
 
 ```bash
 sbx run --kit ./kits/vgm-python --kit ./kits/vgm-jvm \
@@ -60,6 +61,47 @@ right.
 Sandboxes deny outbound network by default, so each kit declares the hosts its
 installers reach. When something fails to install, `sbx policy log` names the
 blocked host.
+
+## The pi agent
+
+`kits/pi` is a sandbox kit rather than a mixin, because it defines an agent sbx
+does not ship. It installs pi from `https://pi.dev/install.sh` onto the
+`shell-docker` template, which already has the Node 22.19+ that pi's installer
+requires. Start it with the kit name as the agent:
+
+```bash
+sbx run --kit ./kits/pi pi
+```
+
+Stack the toolchain mixins onto it like any other agent:
+
+```bash
+sbx run --kit ./kits/pi --kit ./kits/vgm-python --kit ./kits/vgm-zsh pi
+```
+
+### Giving pi an OpenRouter token
+
+The kit ships no credentials — bring your own key from
+[openrouter.ai/keys](https://openrouter.ai/keys). Two ways to hand it over.
+
+Store it on the host, where sbx's proxy holds it and the sandbox never sees the
+value. `openrouter` is one of sbx's built-in secret services:
+
+```bash
+echo "$OPENROUTER_API_KEY" | sbx secret set openrouter
+```
+
+Or authorize from inside the running agent, which mints a key billed against
+your OpenRouter credits and writes it to `~/.pi/agent/auth.json` in the sandbox:
+
+```
+/login openrouter
+```
+
+Either way `openrouter.ai:443` is already allowed by the kit. Pick a model with
+`--provider openrouter --model <model-id>`, or `/model` mid-session. Pi reads
+`OPENROUTER_API_KEY` if you would rather set the variable yourself, but then the
+key does live inside the sandbox.
 
 Attach one to a sandbox that already exists. Its container is recreated with the
 kit appended, and workspace data and agent session state are preserved:
