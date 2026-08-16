@@ -45,6 +45,7 @@ toolchains only worked in interactive shells.
 | `kits/vgm-node` | mixin | nvm, Node 22.21.1 as the default |
 | `kits/vgm-zsh` | mixin | zsh as the login shell, oh-my-zsh, powerlevel10k, fzf |
 | `kits/vgm-ralphex` | mixin | [ralphex](https://github.com/umputun/ralphex), autonomous plan execution, plus fzf |
+| `kits/vgm-context7` | mixin | [Context7](https://github.com/upstash/context7) CLI, MCP server and skill for Claude Code |
 | `kits/pi` | sandbox | the [pi](https://pi.dev/) coding agent, which sbx has no built-in agent for |
 
 The mixins are independent, so take the ones you want:
@@ -71,6 +72,32 @@ secret service on the host, so the token never enters the sandbox:
 ```bash
 echo "$(gh auth token)" | sbx secret set github
 ```
+
+## Context7
+
+`kits/vgm-context7` installs the [Context7](https://github.com/upstash/context7)
+CLI and registers its MCP server and skill for Claude Code:
+
+```bash
+sbx run --kit ./kits/vgm-context7 claude
+```
+
+The kit ships no credentials. Without a key, the install step logs a notice and
+skips registration rather than failing the sandbox; get a free key at
+[context7.com/dashboard](https://context7.com/dashboard) and set it up on the
+host with `sbx secret set-custom`, so it never enters the sandbox directly:
+
+```bash
+sbx secret set-custom \
+  --host mcp.context7.com --host api.context7.com --host context7.com \
+  --env CONTEXT7_API_KEY --value YOUR_KEY
+```
+
+Once that secret exists, new sandboxes created with this kit see
+`CONTEXT7_API_KEY` set to a placeholder and run
+`ctx7 setup --claude --api-key "$CONTEXT7_API_KEY"` automatically; the proxy
+swaps the placeholder for the real key on outbound requests to the hosts above.
+For a sandbox created before the secret was set, run that command by hand.
 
 ## ralphex
 
