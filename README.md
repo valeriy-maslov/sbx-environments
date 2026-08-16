@@ -63,6 +63,15 @@ Sandboxes deny outbound network by default, so each kit declares the hosts its
 installers reach. When something fails to install, `sbx policy log` names the
 blocked host.
 
+## GitHub authentication
+
+`gh` ships in the base images already. Log it into sbx's built-in `github`
+secret service on the host, so the token never enters the sandbox:
+
+```bash
+echo "$(gh auth token)" | sbx secret set github
+```
+
 ## ralphex
 
 `kits/vgm-ralphex` installs [ralphex](https://github.com/umputun/ralphex), which
