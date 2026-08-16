@@ -24,12 +24,17 @@ setup:
 
     # CONTEXT7_API_KEY is not declared here; set it up on the host with
     # sbx secret set-custom (see the README) before creating the sandbox.
+    #
+    # --mcp and --yes are required: without --mcp, ctx7 asks interactively
+    # whether to set up MCP-server mode or CLI+Skills mode, and without --yes
+    # it asks for confirmation too. Either prompt hangs forever here, since
+    # this step's stdin is a pipe, not a tty.
     - command: |
         if [ -n "${CONTEXT7_API_KEY:-}" ]; then
-          ctx7 setup --claude --api-key "$CONTEXT7_API_KEY"
+          ctx7 setup --claude --mcp --yes --api-key "$CONTEXT7_API_KEY"
         else
           echo "vgm-context7: CONTEXT7_API_KEY is not set, skipping ctx7 setup." >&2
-          echo "vgm-context7: run 'ctx7 setup --claude --api-key YOUR_KEY' by hand once you have one." >&2
+          echo "vgm-context7: run 'ctx7 setup --claude --mcp --yes --api-key YOUR_KEY' by hand once you have one." >&2
         fi
       user: "1000"
       description: Register the Context7 MCP server and skill for Claude Code
