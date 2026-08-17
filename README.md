@@ -114,6 +114,13 @@ It installs the release binary for the sandbox's architecture rather than using
 `go install`, so it does not need a Go toolchain in the base image. fzf comes
 along too, since that is what ralphex uses to pick a plan.
 
+It also installs the
+[ralphex Claude Code plugin](https://ralphex.com/docs/#claude-code-integration-optional)
+from its marketplace, via `claude plugin marketplace add` and
+`claude plugin install` rather than the interactive `/plugin` slash commands,
+so it works as a kit install step. That gives Claude Code the `/ralphex`,
+`/ralphex-plan`, `/ralphex-adopt` and `/ralphex-update` slash commands.
+
 Plans live in `docs/plans/`, and config in `.ralphex/` in the repository root,
 falling back to `~/.config/ralphex/`.
 

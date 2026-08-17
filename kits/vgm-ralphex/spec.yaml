@@ -51,3 +51,11 @@ setup:
         DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=60 install -y fzf
       user: "0"
       description: Install fzf, which ralphex uses to pick a plan
+
+    # gives Claude Code the /ralphex, /ralphex-plan, /ralphex-adopt and
+    # /ralphex-update slash commands
+    - command: |
+        claude plugin marketplace add umputun/ralphex
+        claude plugin install ralphex@ralphex
+      user: "1000"
+      description: Install the ralphex Claude Code plugin
