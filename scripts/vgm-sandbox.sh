@@ -68,9 +68,24 @@ if [ -z "$CONTEXT7_API_KEY" ] && { exec 3<"/dev/tty"; } 2>/dev/null; then
   exec 3<&-
 fi
 if [ -n "$CONTEXT7_API_KEY" ]; then
-  sbx secret set-custom \
+  # set-custom only updates an existing entry if its placeholder is passed back
+  # to it; a bare re-run with no --placeholder just refuses with "already
+  # exists". The placeholder isn't otherwise queryable, but the refusal error
+  # names it, so extract it from stderr and retry once with it.
+  err="$(sbx secret set-custom \
     --host mcp.context7.com --host api.context7.com --host context7.com \
-    --env CONTEXT7_API_KEY --value "$CONTEXT7_API_KEY" >/dev/null
+    --env CONTEXT7_API_KEY --value "$CONTEXT7_API_KEY" 2>&1 >/dev/null)" || {
+    placeholder="$(printf '%s' "$err" | sed -n 's/.*with placeholder "\([^"]*\)".*/\1/p')"
+    if [ -n "$placeholder" ]; then
+      sbx secret set-custom \
+        --host mcp.context7.com --host api.context7.com --host context7.com \
+        --placeholder "$placeholder" \
+        --env CONTEXT7_API_KEY --value "$CONTEXT7_API_KEY" >/dev/null
+    else
+      echo "vgm-sandbox: failed to store the Context7 API key: $err" >&2
+      exit 1
+    fi
+  }
   echo "vgm-sandbox: stored the Context7 API key"
 fi
 
