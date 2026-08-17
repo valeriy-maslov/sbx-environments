@@ -206,11 +206,15 @@ already-authenticated `claude` rather than needing a separate API key. That
 means one Zed config entry works for every project, with no sandbox name
 hardcoded.
 
+Install it into `~/bin`:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/valeriy-maslov/sbx-environments/master/scripts/sbx-claude-acp.sh \
-  -o ~/bin/sbx-claude-acp.sh
-chmod +x ~/bin/sbx-claude-acp.sh
+curl -fsSL https://raw.githubusercontent.com/valeriy-maslov/sbx-environments/master/scripts/install-sbx-claude-acp.sh | sh
 ```
+
+Re-run that same command whenever the bridge script changes — it always
+fetches the current version from the repo and overwrites whatever is at
+`~/bin/sbx-claude-acp.sh`, whether that's a fresh install or an update.
 
 Add it to Zed's `settings.json`:
 
