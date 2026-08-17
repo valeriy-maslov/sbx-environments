@@ -201,10 +201,18 @@ way. What takes wiring up is pointing Zed's Agent Panel at an agent running
 belongs to the current directory by matching `$PWD` against `sbx ls --json`'s
 reported workspaces, then runs
 [`@agentclientprotocol/claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp)
-inside it over `sbx exec -i`, with `--cli` so it drives the sandbox's own
-already-authenticated `claude` rather than needing a separate API key. That
-means one Zed config entry works for every project, with no sandbox name
-hardcoded.
+inside it over `sbx exec -i`. That means one Zed config entry works for every
+project, with no sandbox name hardcoded, and it reuses the sandbox's own
+already-authenticated `claude` session without a separate API key.
+
+Do not add `--cli`, despite what its own `--help` suggests — it bypasses ACP
+entirely and gateways stdin straight into an interactive `claude` session
+instead of speaking JSON-RPC, so anything Zed sends lands as literal chat
+input and the Agent Panel hangs on "loading" waiting for a protocol response
+that never comes. Confirmed by hand-driving the plain (no `--cli`) command
+with a raw `initialize` / `session/new` handshake over `sbx exec -i`: clean
+single-line JSON-RPC on stdout either way, `authMethods` empty either way —
+`--cli` only changes whether it actually speaks the protocol.
 
 Install it into `~/bin`:
 

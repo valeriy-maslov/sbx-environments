@@ -18,5 +18,11 @@ if [ -z "$SANDBOX" ]; then
   exit 1
 fi
 
+# no --cli: that flag bypasses ACP entirely and gateways raw stdin straight
+# into an interactive claude session instead of speaking JSON-RPC, so any
+# protocol message from Zed lands as literal chat input and the panel hangs
+# on "loading" waiting for a response that will never come. Plain invocation
+# is the real ACP server, and it still reuses the sandbox's already
+# authenticated claude session (authMethods comes back empty).
 exec sbx exec -i "$SANDBOX" sh -c \
-  'mkdir -p /usr/local/share/npm-global/lib && exec npx -y @agentclientprotocol/claude-agent-acp --cli'
+  'mkdir -p /usr/local/share/npm-global/lib && exec npx -y @agentclientprotocol/claude-agent-acp'
