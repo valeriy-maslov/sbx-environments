@@ -190,6 +190,50 @@ prompt expects a Nerd Font in the terminal you attach from.
 Interactive bash hands over to zsh, so `sbx exec -it <sandbox> bash` lands in
 zsh too. Non-interactive bash is left alone, which is what agents run.
 
+## Zed, via ACP
+
+A sandbox's workspace mounts at the same absolute path on the host, so opening
+its directory in Zed needs nothing special — File → Open, same files either
+way. What takes wiring up is pointing Zed's Agent Panel at an agent running
+*inside* the sandbox rather than on the host.
+
+`scripts/sbx-claude-acp.sh` is a bridge for that: it resolves which sandbox
+belongs to the current directory by matching `$PWD` against `sbx ls --json`'s
+reported workspaces, then runs
+[`@agentclientprotocol/claude-agent-acp`](https://github.com/agentclientprotocol/claude-agent-acp)
+inside it over `sbx exec -i`, with `--cli` so it drives the sandbox's own
+already-authenticated `claude` rather than needing a separate API key. That
+means one Zed config entry works for every project, with no sandbox name
+hardcoded.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/valeriy-maslov/sbx-environments/master/scripts/sbx-claude-acp.sh \
+  -o ~/bin/sbx-claude-acp.sh
+chmod +x ~/bin/sbx-claude-acp.sh
+```
+
+Add it to Zed's `settings.json`:
+
+```json
+{
+  "agent_servers": {
+    "sbx-claude": {
+      "type": "custom",
+      "command": "/Users/you/bin/sbx-claude-acp.sh"
+    }
+  }
+}
+```
+
+Then pick "sbx-claude" in Zed's Agent Panel. This relies on Zed launching the
+command with its cwd set to the project root, which is not documented on
+Zed's side — if the panel can't find a sandbox, that assumption is the first
+thing to check.
+
+`jq` is required on the host; `-i` (not `-it`) is required in the `sbx exec`
+call, since ACP is line-delimited JSON-RPC over raw stdio and a pseudo-tty
+would corrupt it.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
