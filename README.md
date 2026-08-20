@@ -73,6 +73,38 @@ secret service on the host, so the token never enters the sandbox:
 echo "$(gh auth token)" | sbx secret set github
 ```
 
+## Git identity and SSH
+
+Sandboxes copy `~/.gitconfig` from the host at creation time — `user.name`,
+`user.email`, `core.excludesfile`, all of it. Nothing to set up.
+
+Git over SSH is also already forwarded: every sandbox gets `SSH_AUTH_SOCK`
+pointing at a live, forwarded agent socket. If `git clone git@github.com:...`
+still fails, it is almost always because the *host's* agent has no identity
+loaded, not the sandbox — check with `ssh-add -l` on the host. If it says "The
+agent has no identities", load your key:
+
+```bash
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+```
+
+`--apple-use-keychain` stores the passphrase in Keychain so this survives a
+reboot; without it, the agent forgets the key on next login and every sandbox
+loses SSH auth again until you re-run it. To make loading permanent instead of
+a one-off, add to `~/.ssh/config`:
+
+```
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+```
+
+`AddKeysToAgent yes` loads a key into the agent the first time you use it (no
+manual `ssh-add` at all), and `UseKeychain yes` is what makes
+`ssh-add`/first-use both persist across reboots. Once the host agent holds the
+key, every sandbox — already running or created after — picks it up through
+the existing forwarding with no sandbox-side change.
+
 ## Context7
 
 `kits/vgm-context7` installs the [Context7](https://github.com/upstash/context7)
